@@ -18,12 +18,9 @@ type Tweet struct {
 	FavoriteCount        int                    `json:"favorite_count"`
 	Favorited            bool                   `json:"favorited"`
 	FilterLevel          string                 `json:"filter_level"`
-	ID                   int64                  `json:"id"`
 	IDStr                string                 `json:"id_str"`
 	InReplyToScreenName  string                 `json:"in_reply_to_screen_name"`
-	InReplyToStatusID    int64                  `json:"in_reply_to_status_id"`
 	InReplyToStatusIDStr string                 `json:"in_reply_to_status_id_str"`
-	InReplyToUserID      int64                  `json:"in_reply_to_user_id"`
 	InReplyToUserIDStr   string                 `json:"in_reply_to_user_id_str"`
 	Lang                 string                 `json:"lang"`
 	PossiblySensitive    bool                   `json:"possibly_sensitive"`
@@ -45,7 +42,6 @@ type Tweet struct {
 	WithheldScope        string                 `json:"withheld_scope"`
 	ExtendedEntities     *ExtendedEntity        `json:"extended_entities"`
 	ExtendedTweet        *ExtendedTweet         `json:"extended_tweet"`
-	QuotedStatusID       int64                  `json:"quoted_status_id"`
 	QuotedStatusIDStr    string                 `json:"quoted_status_id_str"`
 	QuotedStatus         *Tweet                 `json:"quoted_status"`
 }
@@ -96,7 +92,6 @@ type Coordinates struct {
 
 // TweetIdentifier represents the id by which a Tweet can be identified.
 type TweetIdentifier struct {
-	ID    int64  `json:"id"`
 	IDStr string `json:"id_str"`
 }
 
@@ -114,7 +109,7 @@ func newStatusService(sling *sling.Sling) *StatusService {
 
 // StatusShowParams are the parameters for StatusService.Show
 type StatusShowParams struct {
-	ID               int64  `url:"id,omitempty"`
+	ID               string  `url:"id,omitempty"`
 	TrimUser         *bool  `url:"trim_user,omitempty"`
 	IncludeMyRetweet *bool  `url:"include_my_retweet,omitempty"`
 	IncludeEntities  *bool  `url:"include_entities,omitempty"`
@@ -123,7 +118,7 @@ type StatusShowParams struct {
 
 // Show returns the requested Tweet.
 // https://dev.twitter.com/rest/reference/get/statuses/show/%3Aid
-func (s *StatusService) Show(id int64, params *StatusShowParams) (*Tweet, *http.Response, error) {
+func (s *StatusService) Show(id string, params *StatusShowParams) (*Tweet, *http.Response, error) {
 	if params == nil {
 		params = &StatusShowParams{}
 	}
@@ -136,7 +131,7 @@ func (s *StatusService) Show(id int64, params *StatusShowParams) (*Tweet, *http.
 
 // StatusLookupParams are the parameters for StatusService.Lookup
 type StatusLookupParams struct {
-	ID              []int64 `url:"id,omitempty,comma"`
+	ID              []string `url:"id,omitempty,comma"`
 	TrimUser        *bool   `url:"trim_user,omitempty"`
 	IncludeEntities *bool   `url:"include_entities,omitempty"`
 	Map             *bool   `url:"map,omitempty"`
@@ -146,7 +141,7 @@ type StatusLookupParams struct {
 // Lookup returns the requested Tweets as a slice. Combines ids from the
 // required ids argument and from params.Id.
 // https://dev.twitter.com/rest/reference/get/statuses/lookup
-func (s *StatusService) Lookup(ids []int64, params *StatusLookupParams) ([]Tweet, *http.Response, error) {
+func (s *StatusService) Lookup(ids []string, params *StatusLookupParams) ([]Tweet, *http.Response, error) {
 	if params == nil {
 		params = &StatusLookupParams{}
 	}
@@ -160,14 +155,14 @@ func (s *StatusService) Lookup(ids []int64, params *StatusLookupParams) ([]Tweet
 // StatusUpdateParams are the parameters for StatusService.Update
 type StatusUpdateParams struct {
 	Status             string   `url:"status,omitempty"`
-	InReplyToStatusID  int64    `url:"in_reply_to_status_id,omitempty"`
+	InReplyToStatusID  string    `url:"in_reply_to_status_id,omitempty"`
 	PossiblySensitive  *bool    `url:"possibly_sensitive,omitempty"`
 	Lat                *float64 `url:"lat,omitempty"`
 	Long               *float64 `url:"long,omitempty"`
 	PlaceID            string   `url:"place_id,omitempty"`
 	DisplayCoordinates *bool    `url:"display_coordinates,omitempty"`
 	TrimUser           *bool    `url:"trim_user,omitempty"`
-	MediaIds           []int64  `url:"media_ids,omitempty,comma"`
+	MediaIds           []string  `url:"media_ids,omitempty,comma"`
 	TweetMode          string   `url:"tweet_mode,omitempty"`
 }
 
@@ -187,7 +182,7 @@ func (s *StatusService) Update(status string, params *StatusUpdateParams) (*Twee
 
 // StatusRetweetParams are the parameters for StatusService.Retweet
 type StatusRetweetParams struct {
-	ID        int64  `url:"id,omitempty"`
+	ID        string  `url:"id,omitempty"`
 	TrimUser  *bool  `url:"trim_user,omitempty"`
 	TweetMode string `url:"tweet_mode,omitempty"`
 }
@@ -196,14 +191,14 @@ type StatusRetweetParams struct {
 // with embedded retweet details.
 // Requires a user auth context.
 // https://dev.twitter.com/rest/reference/post/statuses/retweet/%3Aid
-func (s *StatusService) Retweet(id int64, params *StatusRetweetParams) (*Tweet, *http.Response, error) {
+func (s *StatusService) Retweet(id string, params *StatusRetweetParams) (*Tweet, *http.Response, error) {
 	if params == nil {
 		params = &StatusRetweetParams{}
 	}
 	params.ID = id
 	tweet := new(Tweet)
 	apiError := new(APIError)
-	path := fmt.Sprintf("retweet/%d.json", params.ID)
+	path := fmt.Sprintf("retweet/%s.json", params.ID)
 	resp, err := s.sling.New().Post(path).BodyForm(params).Receive(tweet, apiError)
 	return tweet, resp, relevantError(err, *apiError)
 }
